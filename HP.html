@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ДР</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #fff;
+            text-align: center;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            padding-bottom: 150px;
+        }
+
+        h1 {
+            font-size: 3em;
+            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .message {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .cake {
+            position: relative;
+            margin: 100px auto 50px;
+            width: 200px;
+            height: 100px;
+            background: #f9c5d1;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .candles {
+            display: flex;
+            justify-content: space-around;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+        }
+
+        .candle {
+            position: relative;
+            width: 8px;
+            height: 50px;
+            background: linear-gradient(to right, #fff, #f5f5f5, #fff);
+            border-radius: 4px;
+        }
+
+        .flame {
+            position: absolute;
+            top: -15px;
+            left: -3px;
+            width: 14px;
+            height: 20px;
+            background: #ff9900;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 10px #ff9900, 0 0 20px #ff6600, 0 0 30px #ff3300;
+            animation: flicker 0.5s infinite alternate;
+            transform-origin: center bottom;
+        }
+
+        .blown {
+            opacity: 0.3;
+        }
+
+        .blown .flame {
+            display: none;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            font-size: 1.2em;
+            color: #aaa;
+        }
+
+        .balloon {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 3s infinite linear;
+            z-index: 1;
+            top: 50px;
+        }
+
+        .string {
+            position: absolute;
+            background: #ccc;
+            width: 2px;
+            height: 100px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-100px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes flicker {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.1, 0.9);
+                opacity: 0.8;
+            }
+        }
+
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 5px;
+            animation: explode 1s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+                width: 5px;
+                height: 5px;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty));
+                opacity: 0;
+                width: 2px;
+                height: 2px;
+            }
+        }
+
+        .complete {
+            display: none;
+            font-size: 2em;
+            color: gold;
+            text-shadow: 0 0 10px gold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>С Днём Рождения, Кристьян~~</h1>
+        <h2>Кликни в любое место</h2>
+        <div class="message">Загадай желание и дуй! Только не сильно, уже старость не радость, дыхалка все</div>
+        
+        <div class="cake">
+            <div class="candles" id="candles"></div>
+        </div>
+        
+        <div class="instructions" id="instructions">Дуй в микрофон, чтобы задуть свечи!)</div>
+        <div class="complete" id="complete">Етижи пасатижи, задула все! Ну молодцаа)))❤️‍🔥🎂</div>
+    </div>
+
+    <script>
+        function playBirthdaySong() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!window.birthdayAudioContext) {
+             window.birthdayAudioContext = new AudioContext();
+            }
+            const audioContext = window.birthdayAudioContext;
+        
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log("AudioContext resumed");
+                    actuallyPlaySong(audioContext);
+                });
+            } else {
+                actuallyPlaySong(audioContext);
+            }
+        } catch (e) {
+            console.error("Error playing birthday song:", e);
+        }
+    }
+
+    function actuallyPlaySong(audioContext) {
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+    
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+    
+        const notes = [
+        {freq: 392, duration: 0.3}, // G
+        {freq: 392, duration: 0.3}, // G
+        {freq: 440, duration: 0.6}, // A
+        {freq: 392, duration: 0.6}, // G
+        {freq: 523, duration: 0.6}, // C
+        {freq: 494, duration: 0.9}, // B
+        
+        {freq: 392, duration: 0.3}, // G
+        {freq: 392, duration: 0.3}, // G
+        {freq: 440, duration: 0.6}, // A
+        {freq: 392, duration: 0.6}, // G
+        {freq: 587, duration: 0.6}, // D
+        {freq: 523, duration: 0.9}, // C
+        
+        {freq: 392, duration: 0.3}, // G
+        {freq: 392, duration: 0.3}, // G
+        {freq: 784, duration: 0.6}, // G (high)
+        {freq: 659, duration: 0.6}, // E
+        {freq: 523, duration: 0.6}, // C
+        {freq: 494, duration: 0.6}, // B
+        {freq: 440, duration: 0.9}, // A
+        
+        {freq: 698, duration: 0.3}, // F
+        {freq: 698, duration: 0.3}, // F
+        {freq: 659, duration: 0.6}, // E
+        {freq: 523, duration: 0.6}, // C
+        {freq: 587, duration: 0.6}, // D
+        {freq: 523, duration: 1.2}  // C
+        ];
+    
+        let time = audioContext.currentTime;
+    
+        osc.type = 'triangle';
+        osc.start(time);
+    
+        notes.forEach(note => {
+            osc.frequency.setValueAtTime(note.freq, time);
+            time += note.duration;
+        });
+    
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+    
+        osc.stop(time + 0.5);
+    }
+
+    document.body.addEventListener('click', function initAudio() {
+    playBirthdaySong();
+    document.body.removeEventListener('click', initAudio);
+    });
+
+        function createBalloons() {
+            const colors = ['#ff3366', '#33ff66', '#3366ff', '#ff33ff', '#33ffff', '#ffff33'];
+            for (let i = 0; i < 20; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                
+                const size = Math.random() * 50 + 30;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                balloon.style.width = `${size}px`;
+                balloon.style.height = `${size}px`;
+                balloon.style.background = `radial-gradient(circle at 30% 30%, #fff, ${color})`;
+                balloon.style.left = `${Math.random() * 100}vw`;
+                balloon.style.bottom = `${Math.random() * 20 - 30}vh`;
+                balloon.style.animationDelay = `${Math.random() * 15}s`;
+                
+                const string = document.createElement('div');
+                string.className = 'string';
+                balloon.appendChild(string);
+                
+                document.body.appendChild(balloon);
+            }
+        }
+
+        function createCandles() {
+            const candlesContainer = document.getElementById('candles');
+            for (let i = 0; i < 20; i++) {
+                const candle = document.createElement('div');
+                candle.className = 'candle';
+                
+                const flame = document.createElement('div');
+                flame.className = 'flame';
+                candle.appendChild(flame);
+                
+                candle.dataset.lit = 'true';
+                candlesContainer.appendChild(candle);
+            }
+        }
+
+        function createFirework(x, y) {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            const particles = 30;
+            
+            for (let i = 0; i < particles; i++) {
+                const angle = (Math.PI * 2) * (i / particles);
+                const distance = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${x}px`;
+                firework.style.top = `${y}px`;
+                firework.style.setProperty('--tx', `${tx}px`);
+                firework.style.setProperty('--ty', `${ty}px`);
+                firework.style.boxShadow = `0 0 10px 5px ${color}`;
+                
+                document.body.appendChild(firework);
+                
+                setTimeout(() => {
+                    firework.remove();
+                }, 1000);
+            }
+        }
+
+        async function initMicrophone() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioContext = new AudioContext();
+                const analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                let blowTimeout = null;
+                
+                function checkBlow() {
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / bufferLength;
+                    
+                    if (average > 60) {
+                        if (!blowTimeout) {
+                            blowTimeout = setTimeout(() => {
+                                blowCandle();
+                                blowTimeout = null;
+                            }, 200);
+                        }
+                    } else {
+                        if (blowTimeout) {
+                            clearTimeout(blowTimeout);
+                            blowTimeout = null;
+                        }
+                    }
+                    
+                    requestAnimationFrame(checkBlow);
+                }
+                
+                checkBlow();
+            } catch (err) {
+                console.error('Ошибка микрофона:', err);
+                document.getElementById('instructions').textContent = 'Микрофон не доступен. Кликай по свечам, чтобы задуть их!';
+                
+                const candles = document.querySelectorAll('.candle');
+                candles.forEach(candle => {
+                    candle.addEventListener('click', () => {
+                        if (candle.dataset.lit === 'true') {
+                            blowCandle(candle);
+                        }
+                    });
+                });
+            }
+        }
+
+        function blowCandle(candleToBlow) {
+            let candles;
+            if (candleToBlow) {
+                candles = [candleToBlow];
+            } else {
+                candles = document.querySelectorAll('.candle[data-lit="true"]');
+                if (candles.length === 0) return;
+                const randomIndex = Math.floor(Math.random() * candles.length);
+                candles = [candles[randomIndex]];
+            }
+            
+            candles.forEach(candle => {
+                candle.dataset.lit = 'false';
+                candle.classList.add('blown');
+                const rect = candle.getBoundingClientRect();
+                createFirework(rect.left + rect.width / 2, rect.top);
+            });
+            const remaining = document.querySelectorAll('.candle[data-lit="true"]').length;
+            if (remaining === 0) {
+                setTimeout(() => {
+                    document.getElementById('instructions').style.display = 'none';
+                    document.getElementById('complete').style.display = 'block';
+                    for (let i = 0; i < 10; i++) {
+                        setTimeout(() => {
+                            const x = Math.random() * window.innerWidth;
+                            const y = Math.random() * window.innerHeight / 2;
+                            createFirework(x, y);
+                        }, i * 300);
+                    }
+                }, 1000);
+            }
+        }
+        window.onload = function() {
+            createBalloons();
+            createCandles();
+            playBirthdaySong();
+            initMicrophone();
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight / 2;
+                    createFirework(x, y);
+                }
+            }, 2000);
+        };
+    </script>
+</body>
+</html>
